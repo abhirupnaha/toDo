@@ -1,25 +1,46 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect, useState } from 'react';
+
+import Tasks from './components/Tasks/Tasks';
+import NewTask from './components/NewTask/NewTask';
+import useHttp from "./hooks/use-http";
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+	const [tasks, setTasks] = useState([]);
+
+	const transformTasks = (task) => {
+		const loadedTasks = [];
+
+		for (const taskKey in task) {
+			loadedTasks.push({ id: taskKey, text: task[taskKey].text });
+		}
+
+		setTasks(loadedTasks);
+	}
+
+	const { isLoading, error, sendRequest : fetchTasks } = useHttp(
+		{url:'https://react-http-b90a6-default-rtdb.asia-southeast1.firebasedatabase.app/tasks.json'},
+		transformTasks
+	)
+
+	useEffect(() => {
+		fetchTasks();
+	}, []);
+
+	const taskAddHandler = (task) => {
+		setTasks((prevTasks) => prevTasks.concat(task));
+	};
+
+	return (
+		<React.Fragment>
+			<NewTask onAddTask={taskAddHandler} />
+			<Tasks
+				items={tasks}
+				loading={isLoading}
+				error={error}
+				onFetch={fetchTasks}
+			/>
+		</React.Fragment>
+	);
 }
 
 export default App;
